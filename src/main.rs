@@ -17,9 +17,9 @@ fn main() {
 
 	builder.set_chain_source_esplora("https://mutinynet.com/api/".to_string(), None);
 
-	let lsp_node_id = "...".parse().unwrap();
-	let lsp_address = "...".parse().unwrap();
-	let lsp_token = Some("...".to_string());
+	let lsp_node_id = "02d71bd10286058cfb8c983f761c069a549d822ca3eb4a4c67d15aa8bec7483251".parse().unwrap();
+	let lsp_address = "143.198.63.18:9735".parse().unwrap();
+	let lsp_token = Some("this-token-is-not-currently-used".to_string());
 
 	builder.set_liquidity_source_lsps2(lsp_node_id, lsp_address, lsp_token);
 
