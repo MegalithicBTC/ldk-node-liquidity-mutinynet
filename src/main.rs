@@ -6,6 +6,8 @@ use ldk_node::config::Config;
 use ldk_node::Builder;
 
 use ldk_node::bitcoin::Network;
+use std::str::FromStr;
+use ldk_node::bitcoin::secp256k1::PublicKey;   
 
 fn main() {
 	let mut config = Config::default();
@@ -17,11 +19,13 @@ fn main() {
 
 	builder.set_chain_source_esplora("https://mutinynet.com/api/".to_string(), None);
 
-	let lsp_node_id = "02d71bd10286058cfb8c983f761c069a549d822ca3eb4a4c67d15aa8bec7483251".parse().unwrap();
+	
+	let lsp_node_id = PublicKey::from_str(
+    "02d71bd10286058cfb8c983f761c069a549d822ca3eb4a4c67d15aa8bec7483251").expect("invalid LSP node id");
 	let lsp_address = "143.198.63.18:9735".parse().unwrap();
 	let lsp_token = Some("this-token-is-not-currently-used".to_string());
 
-	builder.set_liquidity_source_lsps2(lsp_node_id, lsp_address, lsp_token);
+	builder.set_liquidity_source_lsps2( lsp_address, lsp_node_id, lsp_token);
 
 	let node = Arc::new(builder.build().unwrap());
 	node.start().unwrap();
