@@ -34,7 +34,7 @@ fn main() {
 	});
 
 	let invoice =
-		node.bolt11_payment().receive_via_jit_channel(989322000, &"asdf", 3600, None).unwrap();
+		node.bolt11_payment().receive_via_jit_channel(25000000, &"test-megalith-lsps2", 3600, None).unwrap();
 
 	println!("GOT JIT INVOICE: {}", invoice);
 	pause();
