@@ -25,7 +25,7 @@ fn main() {
 	let lsp_address = "143.198.63.18:9735".parse().unwrap();
 	let lsp_token = Some("this-token-is-not-currently-used".to_string());
 
-	builder.set_liquidity_source_lsps2( lsp_address, lsp_node_id, lsp_token);
+	builder.set_liquidity_source_lsps2(lsp_node_id,  lsp_address, lsp_token);
 
 	let node = Arc::new(builder.build().unwrap());
 	node.start().unwrap();
