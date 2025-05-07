@@ -8,7 +8,7 @@ use ldk_node::Builder;
 
 fn main() {
     // ── paths ──────────────────────────────────────────────────────────────
-    let storage_dir = "tmp/ldk_node_liquidity_poc".to_string();   // project-local
+    let storage_dir = "tmp".to_string();   // project-local
     let log_path    = format!("{}/ldk_node.log", storage_dir);
 
     // ── base config ────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ fn main() {
     let mut builder = Builder::from_config(cfg);
     builder
         .set_storage_dir_path(storage_dir.clone())
-        .set_filesystem_logger(Some(log_path.clone()), Some(LogLevel::Info))
+        .set_filesystem_logger(Some(log_path.clone()), Some(LogLevel::Debug))
         .set_chain_source_esplora("https://mutinynet.com/api/".to_string(), None)
         .set_liquidity_source_lsps2(
             lsp_pubkey,
