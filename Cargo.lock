@@ -1214,9 +1214,7 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "ldk-node"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d570ab14b180136650945301124a4b12e73f99c1ecb8cac1e850a30fc087ed4d"
+version = "0.6.0+git"
 dependencies = [
  "base64 0.22.1",
  "bdk_chain",
@@ -2791,7 +2789,3 @@ dependencies = [
  "quote",
  "syn 2.0.98",
 ]
-
-[[patch.unused]]
-name = "ldk-node"
-version = "0.6.0+git"
