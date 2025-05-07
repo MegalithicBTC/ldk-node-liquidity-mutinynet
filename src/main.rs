@@ -1,6 +1,6 @@
 
 use ldk_node::lightning_invoice::{Bolt11InvoiceDescription, Description};
-use ldk_node_liquidity_mutinynet::setup_node;
+use megalith_lsps2::setup_node;
 
 fn main() {
     // ── paths ──────────────────────────────────────────────────────────────

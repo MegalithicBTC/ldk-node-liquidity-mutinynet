@@ -1,10 +1,10 @@
 [package]
-name = "ldk-node-liquidity-mutinynet"
+name = "megalith_lsps2"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "ldk_node_liquidity_mutinynet"
+name = "megalith_lsps2"
 path = "src/lib.rs"
 
 [[bin]]
