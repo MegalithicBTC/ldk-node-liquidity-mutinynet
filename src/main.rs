@@ -1,84 +1,104 @@
 use std::{str::FromStr, sync::Arc, time::Duration};
 
+use crossbeam_channel::{bounded, Receiver};
 use ldk_node::bitcoin::{secp256k1::PublicKey, Network};
 use ldk_node::config::Config;
+use ldk_node::event::Event;                 // <─ event enum lives here
 use ldk_node::lightning_invoice::{Bolt11InvoiceDescription, Description};
 use ldk_node::Builder;
 use log::LevelFilter;
 
 fn main() {
-    // ── stdout logger ──────────────────────────────────────────────────────
+    // ── logging ───────────────────────────────────────────────────────────
     env_logger::Builder::new()
         .filter_level(LevelFilter::Warn)
         .filter_module("ldk_node::liquidity", LevelFilter::Info)
         .filter_module("ldk_node::payment",   LevelFilter::Info)
         .filter_module("ldk_node::chain",     LevelFilter::Info)
-        .filter_module("ldk_node::peer_manager", LevelFilter::Info)
-        .filter_module("ldk_node::node",      LevelFilter::Info)
         .init();
 
-    // ── node config ────────────────────────────────────────────────────────
-    let mut config = Config::default();
-    config.network = Network::Signet;
+    // ── config & builder ───────────────────────────────────────────────────
+    let mut cfg = Config::default();
+    cfg.network = Network::Signet;
 
-    let mut builder = Builder::from_config(config);
+    let mut builder = Builder::from_config(cfg);
     builder
-        .set_storage_dir_path("/tmp/ldk_node_liquidity_poc".into())
+        .set_storage_dir_path("/tmp/ldk_node_liquidity_poc")
         .set_log_facade_logger()
-        .set_chain_source_esplora("https://mutinynet.com/api/".into(), None);
+        .set_chain_source_esplora("https://mutinynet.com/api/", None);
 
-    // LSPS2 provider we trust for zero-conf channels
-    let lsp_node_id = PublicKey::from_str(
+    let lsp_id = PublicKey::from_str(
         "02d71bd10286058cfb8c983f761c069a549d822ca3eb4a4c67d15aa8bec7483251",
     )
     .unwrap();
-    let lsp_address = "143.198.63.18:9735".parse().unwrap();
-
     builder.set_liquidity_source_lsps2(
-        lsp_node_id,
-        lsp_address,
-        Some("this-token-is-not-currently-used".to_string()),
+        lsp_id,
+        "143.198.63.18:9735".parse().unwrap(),
+        None,
     );
 
-    // ── build & start ───────────────────────────────────────────────────────
     let node = Arc::new(builder.build().unwrap());
     node.start().unwrap();
 
-    // graceful shutdown on Ctrl-C
+    // ── ctrl-c handler ─────────────────────────────────────────────────────
     {
-        let node = Arc::clone(&node);
+        let n = Arc::clone(&node);
         ctrlc::set_handler(move || {
-            eprintln!("\nCTRL-C received → stopping node …");
-            if let Err(e) = node.stop() {
-                eprintln!("Failed to stop node cleanly: {:?}", e);
-            }
+            eprintln!("\nCTRL-C → shutting down …");
+            let _ = n.stop();
             std::process::exit(0);
         })
-        .expect("Error setting Ctrl-C handler");
+        .unwrap();
     }
 
-    // print every event
+    // ──  event pump → channel  ─────────────────────────────────────────────
+    let (tx, rx) = bounded::<Event>(128);
     {
-        let event_node = Arc::clone(&node);
+        let n = Arc::clone(&node);
         std::thread::spawn(move || loop {
-            let ev = event_node.wait_next_event();
-            println!("EVENT ▶ {:?}", ev);
-            let _ = event_node.event_handled();
+            let ev = n.wait_next_event();
+            let _ = tx.send(ev);
         });
     }
 
-    // create a JIT-channel invoice
+    wait_for_initial_sync(&rx);
+
+    // ── create invoice only after sync complete ────────────────────────────
     let desc = Bolt11InvoiceDescription::Direct(
-        Description::new("test-megalith-lsps2".to_string()).unwrap(),
+        Description::new("test-megalith-lsps2".into()).unwrap(),
     );
-    let invoice = node
+    let inv = node
         .bolt11_payment()
         .receive_via_jit_channel(25_000_000, &desc, 3_600, None)
         .unwrap();
-    println!("JIT INVOICE: {invoice}");
+    println!("READY → JIT INVOICE: {inv}");
 
-    // keep the main thread alive
+    // keep alive
     loop {
         std::thread::sleep(Duration::from_secs(60));
+    }
+}
+
+/// Blocks until we have seen both the on-chain wallet sync and gossip sync.
+fn wait_for_initial_sync(rx: &Receiver<Event>) {
+    let mut onchain_done = false;
+    let mut gossip_done  = false;
+
+    println!("Waiting for first wallet / gossip sync to finish …");
+    while let Ok(ev) = rx.recv() {
+        match ev {
+            Event::OnchainSyncCompleted { .. } => {
+                onchain_done = true;
+                println!("✓ on-chain wallet sync completed");
+            }
+            Event::GossipSyncCompleted { .. } => {
+                gossip_done = true;
+                println!("✓ gossip sync completed");
+            }
+            _ => { /* ignore other events for now */ }
+        }
+        if onchain_done && gossip_done {
+            break;
+        }
     }
 }
