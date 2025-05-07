@@ -10,8 +10,16 @@ use log::LevelFilter;           // <-- comes from the `log` crate
 fn main() {
     // ── 1. Initialise a stdout logger for the whole process ────────────────
     env_logger::Builder::new()
-        .filter_level(LevelFilter::Trace)   // show everything
-        .init();
+    // quiet by default
+		.filter_level(log::LevelFilter::Warn)
+
+		// let channel + HTLC messages through
+		.filter_module("ldk_node::liquidity",     log::LevelFilter::Info)
+		.filter_module("ldk_node::payment",       log::LevelFilter::Info)
+		.filter_module("ldk_node::chain",         log::LevelFilter::Info)
+		.filter_module("ldk_node::peer_manager",  log::LevelFilter::Info)
+		.filter_module("ldk_node::node",          log::LevelFilter::Info)
+		.init();
 
     // ── 2. Basic node config ───────────────────────────────────────────────
     let mut config = Config::default();
