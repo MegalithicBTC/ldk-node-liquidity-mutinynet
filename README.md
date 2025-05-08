@@ -1,4 +1,4 @@
-Basic usage of the Megalith LSPS2 service can be demonstrated in the following way:
+Basic usage of the Megalith LSPS2 service, currently running on MutinyNet, can be demonstrated in the following way:
 
 1. Clone this repository
 
