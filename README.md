@@ -1,6 +1,6 @@
-Basic usage of the Megalith LSPS2 service can be demoed in the following way.
+Basic usage of the Megalith LSPS2 service can be demonstrated in the following way:
 
-1. Clone https://github.com/MegalithicBTC/ldk-node-liquidity-mutinynet
+1. Clone this repository
 
 2. `cargo run --bin megalith_lsps2` .. this generates a JIT invoice
 
